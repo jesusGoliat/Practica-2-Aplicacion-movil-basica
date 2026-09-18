@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# Virtualenv (no se versiona; se usa el venv local del sistema)
+.venv/
+venv/
+
+# Secretos y datos locales
+.env
+data/
+*.db
