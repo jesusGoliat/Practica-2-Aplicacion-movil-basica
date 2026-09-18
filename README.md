@@ -32,15 +32,6 @@ protegidas por JWT.
 | App movil           | **Kotlin + Jetpack Compose (Material 3)**   | Requerido por el enunciado; Compose permite describir la interfaz de forma declarativa directamente en Kotlin, reduciendo la cantidad de codigo necesario para las 4 pantallas de la practica frente a un enfoque imperativo. |
 | Cliente HTTP        | **Retrofit + OkHttp**                        | Cliente HTTP estandar en el ecosistema Android; permite declarar los endpoints del backend como una interfaz de Kotlin y agregar un interceptor que inyecta automaticamente el token JWT en cada peticion protegida. |
 
-### Autoria del codigo
-
-Todo el codigo de esta entrega es propio: el backend (`backend/`) se construyo desde
-cero en FastAPI + PostgreSQL, y la app Android (`android/TareasApp/`) se genero con
-Android Studio y se desarrollo completa desde ahi — capa de red (`data/remote/`),
-repositorios (`data/repository/`), persistencia de sesion (`data/local/`), ViewModels
-(`viewmodel/`), navegacion (`ui/navigation/`) y las 4 pantallas (`ui/screens/login`,
-`ui/screens/register`, `ui/screens/tareas`).
-
 ---
 
 ## Desarrollo
