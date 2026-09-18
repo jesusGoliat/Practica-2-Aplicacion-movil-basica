@@ -1,0 +1,10 @@
+# OS / editor (repo-wide)
+.DS_Store
+*.swp
+.vscode/
+
+# Archivos de trabajo del autor, no forman parte de la entrega
+CLAUDE.md
+comandos_docker.txt
+Requisitos_Practica2.pdf
+ACTIVIDADES_FALTANTES.md
