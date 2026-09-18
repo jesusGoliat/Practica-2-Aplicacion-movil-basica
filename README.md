@@ -45,51 +45,34 @@ repositorios (`data/repository/`), persistencia de sesion (`data/local/`), ViewM
 
 ## Desarrollo
 
-### Conceptos del Ejercicio 2 (con palabras propias)
+### Conceptos
 
 - **Docker**: una herramienta que permite empaquetar una aplicacion junto con
   todo lo que necesita para correr (interprete, librerias, variables de
-  configuracion) dentro de una unidad aislada llamada *contenedor*. A diferencia
-  de una maquina virtual, un contenedor no simula hardware ni carga un sistema
-  operativo completo: reutiliza el nucleo (kernel) del sistema anfitrion, por eso
-  arranca en segundos en vez de minutos. La gran ventaja practica es la
+  configuracion) dentro de una unidad aislada llamada *contenedor*.
   **reproducibilidad**: si el proyecto corre en un contenedor en mi maquina,
   corre igual en la maquina de un companero o en un servidor en la nube, porque
   las dependencias exactas viajan con el codigo.
 - **Imagen y contenedor**: la *imagen* es una plantilla de solo lectura (como una
   "foto congelada" del sistema de archivos de la app) construida a partir de un
   `Dockerfile`. El *contenedor* es una instancia en ejecucion de esa imagen: se
-  le puede iniciar, detener o borrar, y por defecto es efimero (si se borra el
-  contenedor, se pierde cualquier dato escrito dentro de el que no este en un
-  volumen). Por eso Postgres usa un *volumen* (`./data:/var/lib/postgresql/data`)
-  para que la base de datos sobreviva aunque el contenedor se recree.
+  le puede iniciar, detener o borrar, y por defecto es efimero.
 - **Dockerfile**: un archivo de texto con instrucciones que Docker ejecuta en
   orden para construir la imagen: `FROM` define la imagen base, `WORKDIR` fija el
   directorio de trabajo dentro del contenedor, `COPY` copia archivos del host a
   la imagen, `RUN` ejecuta comandos durante la construccion (por ejemplo,
-  instalar dependencias), `EXPOSE` documenta el puerto que la app usa dentro del
-  contenedor, y `CMD` define el comando que se ejecuta cuando arranca el
-  contenedor.
+  instalar dependencias).
 - **docker-compose.yml**: un archivo YAML que describe la aplicacion completa
   como un conjunto de *servicios* relacionados (en este caso, `backend` y
-  `postgres`), especificando para cada uno la imagen o el Dockerfile a construir,
-  los puertos publicados, los volumenes, las variables de entorno y las
-  dependencias entre servicios (`depends_on`). Con un solo comando
-  (`docker compose up --build`) se construyen las imagenes necesarias y se
-  levantan todos los contenedores conectados entre si en una red privada.
+  `postgres`), especificando para cada uno la imagen.
 - **Backend o servicio REST**: el programa que corre del lado del servidor,
   expone rutas HTTP (por ejemplo `/auth/login`, `/tareas`) y responde a los
-  verbos `GET`, `POST`, `PUT` y `DELETE` segun la accion solicitada. Recibe la
-  peticion, valida los datos de entrada, interactua con la base de datos, y
-  responde en formato JSON junto con un codigo de estado HTTP que indica el
+  verbos `GET`, `POST`, `PUT` y `DELETE` segun la accion solicitada. 
   resultado (exito, error del cliente, error de autenticacion, etc.).
 - **ORM y base de datos**: un ORM (Object-Relational Mapper), como SQLAlchemy
   (usado internamente por SQLModel), permite trabajar con las tablas de la base
   de datos como si fueran clases y objetos del lenguaje de programacion, sin
-  escribir sentencias SQL a mano. Esto reduce errores de sintaxis SQL y ayuda a
-  prevenir inyeccion SQL, porque el ORM parametriza las consultas
-  automaticamente. En esta practica la base de datos es PostgreSQL, un motor
-  relacional robusto que corre como su propio servicio dockerizado.
+  escribir sentencias SQL a mano. 
 
 ### Arquitectura
 
@@ -120,7 +103,6 @@ Practica2/
 │       ├── ui/components/        # Menu de navegacion (AppScaffold)
 │       └── ui/screens/           # LoginScreen, RegisterScreen, TareasListScreen, TareaFormScreen
 ├── imagenes/                     # Capturas de pantalla del flujo probado
-├── CLAUDE.md                     # Checklist de cumplimiento de la practica
 └── README.md                     # Este archivo
 ```
 
@@ -245,35 +227,25 @@ curl http://localhost:8000/
      direccion correcta es `http://10.0.2.2:8000/`, ya que `localhost` desde el
      emulador apunta al propio emulador y no al equipo anfitrion.
 3. Conectar el dispositivo fisico por USB (con depuracion USB activada) o por
-   ADB inalambrico, y ejecutar la app desde Android Studio (Run ▶), o generar
-   el APK con `./gradlew assembleDebug` e instalarlo manualmente
-   (`adb install app/build/outputs/apk/debug/app-debug.apk`).
+   ADB inalambrico, y ejecutar la app desde Android Studio.
 4. El flujo esperado: pantalla de Login → boton "Registrate" si no se tiene
    cuenta → tras iniciar sesion, pantalla de Tareas con boton `+` para crear,
-   casilla para marcar como completada, e iconos de editar/borrar por tarea.
-
+   casilla para marcar como completada
 ### Seguridad — QA documentado
 
 - **Contrasenas**: nunca se almacenan ni se registran (logs) en texto plano;
   se hashean con Argon2 (`backend/app/security.py`) antes de guardarse en la
-  base de datos. Verificado inspeccionando manualmente el contenido de la tabla
-  `user` (columna `hashed_password` contiene solo el hash Argon2, nunca la
-  contrasena original).
+  base de datos.
 - **Sesiones**: cada login exitoso emite un JWT firmado con `JWT_SECRET`
   (HS256) y expiracion configurable (`JWT_EXPIRE_MINUTES`, por defecto 60
   minutos). El backend valida firma y expiracion en cada request a un endpoint
-  protegido (`get_current_user`), y responde `401` si el token falta, es
-  invalido o expiro — verificado con `curl` sin header `Authorization` y con un
-  token invalido a proposito.
+  protegido (`get_current_user`), y responde `401` si el token falta
 - **Aislamiento de datos**: cada tarea pertenece a un `owner_id`; un usuario
   nunca puede leer, editar o borrar tareas de otro usuario (se responde `404`
   en vez de `403` para no filtrar si el recurso existe).
 - **Secretos fuera del repositorio**: `backend/.env` esta en `.gitignore`; solo
   se publica `backend/.env.example` con los nombres de las variables, sin
   valores reales.
-- **Trafico en desarrollo**: la app usa `usesCleartextTraffic="true"` porque el
-  backend no tiene TLS en este entorno de desarrollo local; queda documentado
-  como decision tecnica explicita, no como descuido.
 
 ### Capturas de pantalla
 
@@ -349,22 +321,3 @@ https://docs.docker.com/compose/compose-file/
 
 PyJWT. (2026). *PyJWT documentation*. https://pyjwt.readthedocs.io/
 
-Biryukov, A., Dinu, D., & Khovratovich, D. (2016). *Argon2: the memory-hard
-function for password hashing and other applications* (RFC 9106).
-https://www.rfc-editor.org/rfc/rfc9106
-
-OWASP Foundation. (2026). *Password storage cheat sheet*.
-https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
-
-Google. (2026). *Jetpack Compose documentation*.
-https://developer.android.com/develop/ui/compose/documentation
-
-Google. (2026). *Navigation with Compose*.
-https://developer.android.com/develop/ui/compose/navigation
-
-Square Inc. (2026). *Retrofit documentation*. https://square.github.io/retrofit/
-
-Square Inc. (2026). *OkHttp documentation*. https://square.github.io/okhttp/
-
-Google. (2026). *DataStore documentation*.
-https://developer.android.com/topic/libraries/architecture/datastore
